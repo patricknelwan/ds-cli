@@ -32,3 +32,14 @@ You can also start with an initial prompt:
 ```sh
 ds "how tall is LeBron James?"
 ```
+
+## Releases
+
+GitHub Actions runs formatting, Clippy, tests, and a release build for pull
+requests and `main`. Push a version tag to publish a Linux x86_64 archive and
+its SHA-256 checksum as a GitHub Release:
+
+```sh
+git tag v0.1.0
+git push origin v0.1.0
+```

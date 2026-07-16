@@ -1,0 +1,24 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup update stable && rustup default stable
+      - run: cargo test
+      - run: cargo build --release
+      - run: |
+          mkdir dist
+          tar -C target/release -czf dist/ds-linux-x86_64.tar.gz ds
+          sha256sum dist/ds-linux-x86_64.tar.gz > dist/ds-linux-x86_64.tar.gz.sha256
+      - run: gh release create "$GITHUB_REF_NAME" dist/* --generate-notes
+        env:
+          GH_TOKEN: ${{ github.token }}

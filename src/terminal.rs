@@ -10,7 +10,7 @@ pub fn print_intro() {
 }
 
 pub fn start_response() -> io::Result<()> {
-    print!("\n");
+    println!();
     io::stdout().flush()
 }
 
