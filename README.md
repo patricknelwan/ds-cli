@@ -35,6 +35,19 @@ ds "how tall is LeBron James?"
 
 ## Releases
 
+Pushing a `v*` tag publishes Linux x86_64 archives plus Debian (`.deb`) and
+Fedora/RHEL (`.rpm`) packages to GitHub Releases. Each release includes a
+`SHA256SUMS` file for verification.
+
+After downloading a release package, install it with:
+
+```sh
+sudo apt install ./ds-cli_<version>-1_amd64.deb  # Debian/Ubuntu
+sudo dnf install ./ds-cli-<version>-1.x86_64.rpm # Fedora/RHEL
+```
+
+## Releases
+
 GitHub Actions runs formatting, Clippy, tests, and a release build for pull
 requests and `main`. Push a version tag to publish a Linux x86_64 archive and
 its SHA-256 checksum as a GitHub Release:

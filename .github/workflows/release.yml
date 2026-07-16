@@ -15,10 +15,15 @@ jobs:
       - run: rustup update stable && rustup default stable
       - run: cargo test
       - run: cargo build --release
+      - run: cargo install cargo-deb --version 3.7.0 && cargo install cargo-generate-rpm --version 0.21.0
       - run: |
           mkdir dist
+          strip target/release/ds
+          cargo deb --no-build
+          cargo generate-rpm
           tar -C target/release -czf dist/ds-linux-x86_64.tar.gz ds
-          sha256sum dist/ds-linux-x86_64.tar.gz > dist/ds-linux-x86_64.tar.gz.sha256
+          cp target/debian/*.deb target/generate-rpm/*.rpm dist/
+          sha256sum dist/* > dist/SHA256SUMS
       - run: gh release create "$GITHUB_REF_NAME" dist/* --generate-notes
         env:
           GH_TOKEN: ${{ github.token }}
