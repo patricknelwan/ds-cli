@@ -36,6 +36,7 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     terminal::print_intro();
+    let mut prompt_editor = terminal::prompt_editor()?;
     let workspace = tools::Workspace::current()?;
     let tool_definitions = tools::definitions();
     let mut messages = vec![json!({
@@ -55,7 +56,7 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     loop {
-        let prompt = terminal::read_prompt(&model)?;
+        let prompt = terminal::read_prompt(&mut prompt_editor, &model)?;
         match prompt.as_str() {
             "" => continue,
             "/exit" | "/quit" => break,
