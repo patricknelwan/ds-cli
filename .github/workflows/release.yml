@@ -8,7 +8,7 @@ permissions:
   contents: write
 
 jobs:
-  release:
+  linux:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -23,7 +23,38 @@ jobs:
           cargo generate-rpm
           tar -C target/release -czf dist/ds-linux-x86_64.tar.gz ds
           cp target/debian/*.deb target/generate-rpm/*.rpm dist/
-          sha256sum dist/* > dist/SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-packages
+          path: dist/
+
+  macos:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup update stable && rustup default stable
+      - run: cargo test
+      - run: cargo build --release
+      - run: |
+          mkdir dist
+          tar -C target/release -czf dist/ds-macos-aarch64.tar.gz ds
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-aarch64
+          path: dist/
+
+  publish:
+    needs: [linux, macos]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: '*'
+          merge-multiple: true
+          path: dist/
+      - run: |
+          cd dist
+          sha256sum -- * > SHA256SUMS
       - run: gh release create "$GITHUB_REF_NAME" dist/* --generate-notes
         env:
           GH_TOKEN: ${{ github.token }}
