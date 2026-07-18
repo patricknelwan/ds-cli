@@ -7,27 +7,15 @@ pub fn print_intro() {
     println!("ds interactive — /model to switch, /exit to quit");
 }
 
-pub fn start_response() -> io::Result<()> {
+pub fn print_response(markdown: &str) -> io::Result<()> {
     println!();
-    io::stdout().flush()
-}
-
-pub fn print_chunk(chunk: &str) -> io::Result<()> {
-    print!("{chunk}");
-    io::stdout().flush()
-}
-
-pub fn finish_response() -> io::Result<()> {
+    termimad::print_text(markdown);
     println!("\n");
     io::stdout().flush()
 }
 
 pub fn print_working() {
     println!("[working…]");
-}
-
-pub fn has_visible_text(chunk: &str) -> bool {
-    !chunk.trim().is_empty()
 }
 
 pub fn prompt_for_key() -> Result<String, Box<dyn std::error::Error>> {
@@ -91,15 +79,4 @@ fn read_line(label: &str) -> Result<String, io::Error> {
     let mut input = String::new();
     io::stdin().read_line(&mut input)?;
     Ok(input.trim().into())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn whitespace_does_not_start_a_response() {
-        assert!(!has_visible_text(" \n"));
-        assert!(has_visible_text("hello"));
-    }
 }

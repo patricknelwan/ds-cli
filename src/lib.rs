@@ -92,19 +92,10 @@ fn ask(
     let result = (|| -> Result<(), Box<dyn std::error::Error>> {
         let mut used_tools = false;
         for _ in 0..MAX_TOOL_ROUNDS {
-            let mut started = false;
-            let response = deepseek::stream(api_key, model, messages, tool_definitions, |chunk| {
-                if !started && !terminal::has_visible_text(chunk) {
-                    return Ok(());
-                }
-                if !started {
-                    terminal::start_response()?;
-                    started = true;
-                }
-                terminal::print_chunk(chunk)
-            })?;
-            if started {
-                terminal::finish_response()?;
+            let response =
+                deepseek::stream(api_key, model, messages, tool_definitions, |_| Ok(()))?;
+            if !response.content.trim().is_empty() {
+                terminal::print_response(&response.content)?;
             }
 
             let tool_calls = response.tool_calls;
