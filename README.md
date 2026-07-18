@@ -22,7 +22,7 @@ ds-cli/
     ├── lib.rs          # Application orchestration and agent tool loop
     ├── config.rs       # Reads and writes ~/.config/ds/config securely
     ├── deepseek.rs     # DeepSeek streaming API client and tool-call parsing
-    ├── models.rs       # Supported DeepSeek model names
+    ├── models.rs       # Fetches available DeepSeek model names
     ├── terminal.rs     # Console prompts, output, and write confirmation UI
     └── tools.rs        # Sandboxed file tools and confirmed shell execution
 ```
