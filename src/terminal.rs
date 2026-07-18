@@ -3,8 +3,6 @@ use std::{
     path::Path,
 };
 
-use crate::models::MODELS;
-
 pub fn print_intro() {
     println!("ds interactive — /model to switch, /exit to quit");
 }
@@ -44,9 +42,12 @@ pub fn read_prompt(model: &str) -> Result<String, io::Error> {
     read_line(&format!("[{model}] > "))
 }
 
-pub fn choose_model(current: &str) -> Result<String, Box<dyn std::error::Error>> {
+pub fn choose_model(
+    models: &[String],
+    current: &str,
+) -> Result<String, Box<dyn std::error::Error>> {
     println!("Models:");
-    for (index, model) in MODELS.iter().enumerate() {
+    for (index, model) in models.iter().enumerate() {
         println!(
             "  {}. {}{}",
             index + 1,
@@ -61,8 +62,8 @@ pub fn choose_model(current: &str) -> Result<String, Box<dyn std::error::Error>>
     choice
         .parse::<usize>()
         .ok()
-        .and_then(|index| MODELS.get(index.saturating_sub(1)))
-        .map(|model| (*model).into())
+        .and_then(|index| models.get(index.saturating_sub(1)))
+        .cloned()
         .ok_or_else(|| "choose a listed model number".into())
 }
 
