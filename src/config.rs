@@ -1,7 +1,5 @@
 use std::{env, fs, io, path::PathBuf};
 
-use crate::models::{DEFAULT_MODEL, is_supported};
-
 pub struct Config {
     pub api_key: Option<String>,
     pub model: String,
@@ -20,7 +18,7 @@ pub fn load(path: &PathBuf) -> Result<Config, io::Error> {
         Ok(text) => Ok(parse(&text)),
         Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(Config {
             api_key: None,
-            model: DEFAULT_MODEL.into(),
+            model: String::new(),
         }),
         Err(error) => Err(error),
     }
@@ -42,13 +40,13 @@ pub fn save(path: &PathBuf, config: &Config) -> Result<(), Box<dyn std::error::E
 fn parse(text: &str) -> Config {
     let mut config = Config {
         api_key: None,
-        model: DEFAULT_MODEL.into(),
+        model: String::new(),
     };
     for line in text.lines() {
         if let Some((name, value)) = line.split_once('=') {
             match name {
                 "DEEPSEEK_API_KEY" => config.api_key = Some(value.into()),
-                "DS_MODEL" if is_supported(value) => config.model = value.into(),
+                "DS_MODEL" if !value.is_empty() => config.model = value.into(),
                 _ => {}
             }
         }

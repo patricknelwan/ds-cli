@@ -11,15 +11,26 @@ use serde_json::{Value, json};
 pub fn run() -> Result<(), Box<dyn std::error::Error>> {
     let path = config::path()?;
     let mut config = config::load(&path)?;
-    let api_key = env::var("DEEPSEEK_API_KEY")
+    let env_api_key = env::var("DEEPSEEK_API_KEY")
         .ok()
+        .filter(|key| !key.is_empty());
+    let api_key = env_api_key
+        .clone()
         .or_else(|| config.api_key.clone())
-        .filter(|key| !key.is_empty())
         .map(Ok)
         .unwrap_or_else(terminal::prompt_for_key)?;
-    let mut model = env::var("DS_MODEL").unwrap_or_else(|_| config.model.clone());
+    let models = models::fetch(&api_key)?;
+    let env_model = env::var("DS_MODEL").ok();
+    let mut model = env_model
+        .filter(|model| models.contains(model))
+        .or_else(|| {
+            (!config.model.is_empty())
+                .then_some(config.model.clone())
+                .filter(|model| models.contains(model))
+        })
+        .unwrap_or_else(|| models[0].clone());
 
-    if config.api_key.is_none() && env::var("DEEPSEEK_API_KEY").is_err() {
+    if config.api_key.is_none() && env_api_key.is_none() {
         config.api_key = Some(api_key.clone());
         config::save(&path, &config)?;
     }
@@ -49,7 +60,7 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
             "" => continue,
             "/exit" | "/quit" => break,
             "/model" => {
-                model = terminal::choose_model(&model)?;
+                model = terminal::choose_model(&models, &model)?;
                 config.model = model.clone();
                 config::save(&path, &config)?;
             }
