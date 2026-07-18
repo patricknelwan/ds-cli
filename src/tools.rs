@@ -27,6 +27,32 @@ impl Workspace {
         })
     }
 
+    pub fn local_context(&self) -> Result<String, io::Error> {
+        let directory = self.root.join(".deep");
+        if !directory.is_dir() {
+            return Ok(String::new());
+        }
+
+        let mut files = Vec::new();
+        collect_markdown_files(&directory, &mut files)?;
+        files.sort();
+
+        let mut context = String::new();
+        for path in files {
+            if fs::metadata(&path)?.len() > MAX_FILE_SIZE {
+                continue;
+            }
+            let Ok(contents) = fs::read_to_string(&path) else {
+                continue;
+            };
+            context.push_str("\n\n--- ");
+            context.push_str(&self.display_path(&path));
+            context.push_str(" ---\n");
+            context.push_str(&contents);
+        }
+        Ok(context)
+    }
+
     pub fn execute(
         &self,
         call: &ToolCall,
@@ -150,6 +176,20 @@ impl Workspace {
             .display()
             .to_string()
     }
+}
+
+fn collect_markdown_files(directory: &Path, files: &mut Vec<PathBuf>) -> Result<(), io::Error> {
+    for entry in fs::read_dir(directory)? {
+        let entry = entry?;
+        let path = entry.path();
+        let file_type = entry.file_type()?;
+        if file_type.is_dir() {
+            collect_markdown_files(&path, files)?;
+        } else if file_type.is_file() && path.extension().is_some_and(|ext| ext == "md") {
+            files.push(path);
+        }
+    }
+    Ok(())
 }
 
 pub fn definitions() -> Vec<Value> {
@@ -278,5 +318,22 @@ mod tests {
                 .unwrap()
                 .contains("stdout:\nok")
         );
+    }
+
+    #[test]
+    fn reads_sorted_markdown_context_from_deep() {
+        let root = std::env::temp_dir().join(format!("ds-cli-context-{}", std::process::id()));
+        fs::create_dir_all(root.join(".deep/nested")).unwrap();
+        fs::write(root.join(".deep/z.md"), "last").unwrap();
+        fs::write(root.join(".deep/nested/a.md"), "first").unwrap();
+        fs::write(root.join(".deep/ignored.txt"), "ignore").unwrap();
+        let workspace = Workspace {
+            root: fs::canonicalize(&root).unwrap(),
+        };
+
+        let context = workspace.local_context().unwrap();
+        assert!(context.find(".deep/nested/a.md").unwrap() < context.find(".deep/z.md").unwrap());
+        assert!(!context.contains("ignore"));
+        fs::remove_dir_all(root).unwrap();
     }
 }

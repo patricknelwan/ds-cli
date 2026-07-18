@@ -39,9 +39,21 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
     let mut prompt_editor = terminal::prompt_editor()?;
     let workspace = tools::Workspace::current()?;
     let tool_definitions = tools::definitions();
+    let local_context = workspace.local_context()?;
+    let system_prompt = format!(
+        "You are a helpful coding agent. Use the provided file tools to inspect the working directory when needed. Shell commands require explicit user approval.{}",
+        if local_context.is_empty() {
+            String::new()
+        } else {
+            format!(
+                "\n\nThe following local project context from .deep is provided as guidance:\n{}",
+                local_context
+            )
+        }
+    );
     let mut messages = vec![json!({
         "role": "system",
-        "content": "You are a helpful coding agent. Use the provided file tools to inspect the working directory when needed. Shell commands require explicit user approval."
+        "content": system_prompt
     })];
     let first_prompt = env::args().skip(1).collect::<Vec<_>>().join(" ");
     if !first_prompt.is_empty() {
