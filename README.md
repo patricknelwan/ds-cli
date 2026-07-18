@@ -11,6 +11,29 @@ On first run, `ds` asks for your API key which you HAVE to get it yourself, then
 
 `ds` can list and read files under the directory where it starts. It asks before every write and shell command. Shell commands start in that directory but are not sandboxed, so please approve only commands you understand.
 
+Responses are rendered as colored Markdown with Codex-style bullets and tree
+lines. Prompts support arrow-key editing, session history, `Alt+Backspace` or
+`Ctrl+W` to delete the previous word, and `Alt+Delete` or `Alt+D` to delete the
+next word.
+
+## Local project context
+
+Create a `.deep` directory in the project where `ds` starts. Every Markdown
+file below it is loaded recursively at startup and provided to the model as
+local project guidance:
+
+```text
+.deep/
+├── project.md
+├── conventions.md
+└── frontend/
+    └── rules.md
+```
+
+Only `.md` files are read. Files larger than 1 MB and non-UTF-8 files are
+skipped. Restart `ds` after changing `.deep` files. If this context is local
+only, add `.deep/` to your project’s `.gitignore`.
+
 ## Architecture
 
 ```text
@@ -23,7 +46,7 @@ ds-cli/
     ├── config.rs       # Reads and writes ~/.config/ds/config securely
     ├── deepseek.rs     # DeepSeek streaming API client and tool-call parsing
     ├── models.rs       # Fetches available DeepSeek model names
-    ├── terminal.rs     # Console prompts, output, and write confirmation UI
+    ├── terminal.rs     # Readline prompts, formatted output, and confirmations
     └── tools.rs        # Sandboxed file tools and confirmed shell execution
 ```
 
